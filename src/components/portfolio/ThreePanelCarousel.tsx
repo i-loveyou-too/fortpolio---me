@@ -13,7 +13,7 @@ const STEP = (Math.PI * 2) / 3;
 const INTRO_DURATION = 8.2;
 const INTRO_ROTATIONS = 6;
 const OBJECT_SCALE = 1.18;
-const OBJECT_Y_OFFSET = -0.62;
+const OBJECT_Y_OFFSET = -0.48;
 
 function easeOutCubic(value: number) {
   return 1 - (1 - value) ** 3;
