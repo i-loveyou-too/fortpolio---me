@@ -1,7 +1,7 @@
 "use client";
 
 import gsap from "gsap";
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { Group } from "three";
 import type { Category, ExperienceState } from "@/types/portfolio";
 import { PortfolioPanel } from "./PortfolioPanel";
@@ -25,7 +25,6 @@ export function ThreePanelCarousel({
   targetIndex,
   phase,
   reducedMotion,
-  onEnterComplete,
   onRotationComplete,
 }: ThreePanelCarouselProps) {
   const entryGroup = useRef<Group>(null);
@@ -33,41 +32,28 @@ export function ThreePanelCarousel({
   const hasEntered = useRef(false);
   const previousTarget = useRef(targetIndex);
 
-  useLayoutEffect(() => {
-    if (!entryGroup.current) return;
-    entryGroup.current.position.y = reducedMotion ? 0 : 6.4;
-  }, [reducedMotion]);
-
   useEffect(() => {
-    if (!entryGroup.current || phase !== "entering" || hasEntered.current) {
+    if (!rotationGroup.current || phase !== "entering" || hasEntered.current) {
       return;
     }
 
     hasEntered.current = true;
 
     if (reducedMotion) {
-      entryGroup.current.position.y = 0;
-      onEnterComplete();
+      rotationGroup.current.rotation.y = 0;
       return;
     }
 
-    const timeline = gsap.timeline({ onComplete: onEnterComplete });
-    timeline
-      .fromTo(
-        entryGroup.current.position,
-        { y: 6.4 },
-        { y: -0.18, duration: 1.25, ease: "expo.out" },
-      )
-      .to(entryGroup.current.position, {
-        y: 0,
-        duration: 0.32,
-        ease: "power2.out",
-      });
+    const tween = gsap.fromTo(
+      rotationGroup.current.rotation,
+      { y: 0.28 },
+      { y: 0, duration: 1.65, ease: "expo.inOut" },
+    );
 
     return () => {
-      timeline.kill();
+      tween.kill();
     };
-  }, [phase, reducedMotion, onEnterComplete]);
+  }, [phase, reducedMotion]);
 
   useEffect(() => {
     if (!rotationGroup.current) return;
@@ -86,17 +72,20 @@ export function ThreePanelCarousel({
   }, [targetIndex, reducedMotion, onRotationComplete]);
 
   return (
-    <group ref={entryGroup} position={[0, 6.4, 0]}>
+    <group ref={entryGroup}>
       <group ref={rotationGroup}>
         {categories.map((category, index) => (
           <PortfolioPanel
             key={category.id}
             category={category}
             index={index}
+            activeIndex={activeIndex}
             active={index === activeIndex}
           />
         ))}
-        <ReflectionGroup categories={categories} activeIndex={activeIndex} />
+        {phase !== "loading" ? (
+          <ReflectionGroup categories={categories} activeIndex={activeIndex} />
+        ) : null}
       </group>
     </group>
   );

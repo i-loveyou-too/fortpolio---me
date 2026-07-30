@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import { categories } from "@/data/categories";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useSwipe } from "@/hooks/useSwipe";
@@ -73,11 +74,20 @@ export function PortfolioExperience() {
         className="relative h-[100dvh] min-h-[560px] cursor-grab overflow-hidden bg-[#f7f3ea] text-[#151515] active:cursor-grabbing [touch-action:pan-y]"
         {...swipeHandlers}
       >
-        <p className="absolute left-1/2 top-6 z-30 -translate-x-1/2 text-center text-[9px] uppercase tracking-[0.18em] text-black/45">
+        <motion.p
+          className="absolute left-1/2 top-6 z-30 -translate-x-1/2 text-center text-[9px] uppercase tracking-[0.18em] text-black/45"
+          animate={{ opacity: phase === "loading" ? 0 : 1 }}
+          transition={{ duration: 0.5 }}
+        >
           Kyunglim Lim is a portfolio maker from Seoul.
-        </p>
+        </motion.p>
 
-        <BackgroundTitle />
+        <motion.div
+          animate={{ opacity: phase === "loading" ? 0 : 1 }}
+          transition={{ duration: 0.7, delay: phase === "loading" ? 0 : 0.25 }}
+        >
+          <BackgroundTitle />
+        </motion.div>
 
         <div className="absolute inset-0 z-10">
           <PortfolioCanvas
@@ -91,11 +101,16 @@ export function PortfolioExperience() {
           />
         </div>
 
-        <CategoryIndicator
-          categories={categories}
-          activeIndex={activeIndex}
-          onStep={step}
-        />
+        <motion.div
+          animate={{ opacity: canInteract ? 1 : 0 }}
+          transition={{ duration: 0.45 }}
+        >
+          <CategoryIndicator
+            categories={categories}
+            activeIndex={activeIndex}
+            onStep={step}
+          />
+        </motion.div>
 
         <div className="sr-only" aria-live="polite">
           Current category: {categories[activeIndex].title},{" "}

@@ -16,6 +16,7 @@ export function ReflectionGroup({ categories, activeIndex }: ReflectionGroupProp
           key={`${category.id}-reflection`}
           category={category}
           index={index}
+          activeIndex={activeIndex}
           active={index === activeIndex}
           reflection
         />

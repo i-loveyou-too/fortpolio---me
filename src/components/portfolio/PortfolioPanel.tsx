@@ -12,14 +12,17 @@ import {
 } from "three";
 import type { Category } from "@/types/portfolio";
 
-export const RING_RADIUS = 3.72;
+export const RING_RADIUS = 2.48;
 export const PANEL_HEIGHT = 3.12;
 export const SEGMENT_ANGLE = (Math.PI * 2) / 3;
+const SIDE_SEGMENT_ANGLE = SEGMENT_ANGLE * 1.32;
+const SIDE_CENTER_ANGLE = SEGMENT_ANGLE * 0.9;
 const RADIAL_SEGMENTS = 56;
 
 type PortfolioPanelProps = {
   category: Category;
   index: number;
+  activeIndex: number;
   active?: boolean;
   reflection?: boolean;
 };
@@ -124,17 +127,30 @@ function makeTexture(category: Category, reflection = false): CanvasTextureType 
   return texture;
 }
 
-function makeSegmentGeometry(index: number): CylinderGeometryType {
-  const thetaStart = -SEGMENT_ANGLE / 2 + index * SEGMENT_ANGLE;
+function getRelativeIndex(index: number, activeIndex: number) {
+  return (((index - activeIndex + 1) % 3) + 3) % 3 - 1;
+}
+
+function makeSegmentGeometry(
+  index: number,
+  active: boolean,
+  activeIndex: number,
+): CylinderGeometryType {
+  const thetaLength = active ? SEGMENT_ANGLE : SIDE_SEGMENT_ANGLE;
+  const centerAngle = active
+    ? index * SEGMENT_ANGLE
+    : activeIndex * SEGMENT_ANGLE +
+      getRelativeIndex(index, activeIndex) * SIDE_CENTER_ANGLE;
+  const thetaStart = centerAngle - thetaLength / 2;
   const geometry = new CylinderGeometry(
-    RING_RADIUS,
-    RING_RADIUS,
+    active ? RING_RADIUS : RING_RADIUS - 0.018,
+    active ? RING_RADIUS : RING_RADIUS - 0.018,
     PANEL_HEIGHT,
     RADIAL_SEGMENTS,
     1,
     true,
     thetaStart,
-    SEGMENT_ANGLE,
+    thetaLength,
   );
 
   return geometry;
@@ -143,6 +159,7 @@ function makeSegmentGeometry(index: number): CylinderGeometryType {
 export function PortfolioPanel({
   category,
   index,
+  activeIndex,
   active = false,
   reflection = false,
 }: PortfolioPanelProps) {
@@ -150,7 +167,10 @@ export function PortfolioPanel({
     () => makeTexture(category, reflection),
     [category, reflection],
   );
-  const geometry = useMemo(() => makeSegmentGeometry(index), [index]);
+  const geometry = useMemo(
+    () => makeSegmentGeometry(index, active, activeIndex),
+    [active, activeIndex, index],
+  );
 
   useEffect(() => {
     return () => {
