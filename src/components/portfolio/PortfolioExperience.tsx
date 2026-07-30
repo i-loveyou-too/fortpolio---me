@@ -1,7 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { PointerEvent } from "react";
 import { motion } from "framer-motion";
 import { categories } from "@/data/categories";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -17,6 +18,11 @@ const PortfolioCanvas = dynamic(
   { ssr: false },
 );
 
+const STEP_ANGLE = (Math.PI * 2) / categories.length;
+const MOUSE_ROTATION_LIMIT = STEP_ANGLE * 0.72;
+const MOUSE_SNAP_THRESHOLD = STEP_ANGLE * 0.34;
+const MOUSE_SETTLE_DELAY = 260;
+
 function normalizeIndex(index: number) {
   return ((index % categories.length) + categories.length) % categories.length;
 }
@@ -25,6 +31,10 @@ export function PortfolioExperience() {
   const reducedMotion = useReducedMotion();
   const [phase, setPhase] = useState<ExperienceState>("entering");
   const [targetIndex, setTargetIndex] = useState(0);
+  const [mouseRotationOffset, setMouseRotationOffset] = useState(0);
+  const canMouseRotateRef = useRef(false);
+  const mouseRotationOffsetRef = useRef(0);
+  const mouseSettleTimer = useRef<number | null>(null);
 
   const activeIndex = useMemo(() => normalizeIndex(targetIndex), [targetIndex]);
   const canInteract = phase === "ready" || phase === "rotating";
@@ -38,6 +48,26 @@ export function PortfolioExperience() {
     [canInteract],
   );
 
+  const clearMouseSettleTimer = useCallback(() => {
+    if (!mouseSettleTimer.current) return;
+    window.clearTimeout(mouseSettleTimer.current);
+    mouseSettleTimer.current = null;
+  }, []);
+
+  const settleMouseRotation = useCallback(() => {
+    clearMouseSettleTimer();
+
+    const offset = mouseRotationOffsetRef.current;
+    mouseRotationOffsetRef.current = 0;
+    setMouseRotationOffset(0);
+
+    if (!canMouseRotateRef.current) return;
+    if (Math.abs(offset) < MOUSE_SNAP_THRESHOLD) return;
+
+    setPhase("rotating");
+    setTargetIndex((current) => current + (offset < 0 ? 1 : -1));
+  }, [clearMouseSettleTimer]);
+
   const handleEnterComplete = useCallback(() => {
     setPhase("ready");
   }, []);
@@ -45,6 +75,10 @@ export function PortfolioExperience() {
   const handleRotationComplete = useCallback(() => {
     setPhase("ready");
   }, []);
+
+  useEffect(() => {
+    canMouseRotateRef.current = phase === "ready";
+  }, [phase]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -63,14 +97,51 @@ export function PortfolioExperience() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [canInteract, step]);
 
+  useEffect(() => {
+    return () => clearMouseSettleTimer();
+  }, [clearMouseSettleTimer]);
+
   useWheelCarousel({ enabled: canInteract, onStep: step });
   const swipeHandlers = useSwipe({ enabled: canInteract, onStep: step });
+
+  function handlePointerMove(event: PointerEvent<HTMLElement>) {
+    swipeHandlers.onPointerMove(event);
+
+    if (phase !== "ready" || reducedMotion) return;
+    if (event.pointerType !== "mouse" || event.buttons !== 0) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const normalizedX = Math.min(
+      Math.max((event.clientX - centerX) / (rect.width / 2), -1),
+      1,
+    );
+    const offset = -normalizedX * MOUSE_ROTATION_LIMIT;
+
+    mouseRotationOffsetRef.current = offset;
+    setMouseRotationOffset(offset);
+
+    clearMouseSettleTimer();
+    mouseSettleTimer.current = window.setTimeout(
+      settleMouseRotation,
+      MOUSE_SETTLE_DELAY,
+    );
+  }
+
+  function handlePointerLeave(event: PointerEvent<HTMLElement>) {
+    swipeHandlers.onPointerCancel(event);
+    settleMouseRotation();
+  }
 
   return (
     <MotionProvider>
       <section
         className="relative h-[100dvh] min-h-[560px] cursor-grab overflow-hidden bg-white text-[#151515] active:cursor-grabbing [touch-action:pan-y]"
-        {...swipeHandlers}
+        onPointerDown={swipeHandlers.onPointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={swipeHandlers.onPointerUp}
+        onPointerCancel={swipeHandlers.onPointerCancel}
+        onPointerLeave={handlePointerLeave}
       >
         <motion.p
           className="absolute left-1/2 top-6 z-30 -translate-x-1/2 text-center text-[9px] uppercase tracking-[0.18em] text-black/45"
@@ -164,6 +235,7 @@ export function PortfolioExperience() {
             categories={categories}
             activeIndex={activeIndex}
             targetIndex={targetIndex}
+            mouseRotationOffset={mouseRotationOffset}
             phase={phase}
             reducedMotion={reducedMotion}
             onEnterComplete={handleEnterComplete}

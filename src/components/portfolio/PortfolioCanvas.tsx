@@ -26,6 +26,7 @@ type PortfolioCanvasProps = {
   categories: Category[];
   activeIndex: number;
   targetIndex: number;
+  mouseRotationOffset: number;
   phase: ExperienceState;
   reducedMotion: boolean;
   onEnterComplete: () => void;
@@ -45,8 +46,8 @@ function CameraRig({ phase, reducedMotion, onEnterComplete }: CameraRigProps) {
   const isMobile = size.width < 700;
   const baseZ = isMobile ? 24.4 : 11.25;
   const baseY = isMobile ? 0.32 : 0.12;
-  const topY = isMobile ? 13.4 : 10.6;
-  const topZ = isMobile ? 0.86 : 0.58;
+  const topY = isMobile ? 18.2 : 15.8;
+  const topZ = isMobile ? 3.8 : 3.1;
 
   useEffect(() => {
     if (entered.current) {
@@ -128,7 +129,7 @@ function ResponsiveCamera() {
   return (
     <PerspectiveCamera
       makeDefault
-      position={[0, isMobile ? 13.4 : 10.6, isMobile ? 0.86 : 0.58]}
+      position={[0, isMobile ? 18.2 : 15.8, isMobile ? 3.8 : 3.1]}
       fov={isMobile ? 42 : 35}
     />
   );

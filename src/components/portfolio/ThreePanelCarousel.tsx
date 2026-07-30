@@ -23,6 +23,7 @@ type ThreePanelCarouselProps = {
   categories: Category[];
   activeIndex: number;
   targetIndex: number;
+  mouseRotationOffset: number;
   phase: ExperienceState;
   reducedMotion: boolean;
   onEnterComplete: () => void;
@@ -33,6 +34,7 @@ export function ThreePanelCarousel({
   categories,
   activeIndex,
   targetIndex,
+  mouseRotationOffset,
   phase,
   reducedMotion,
   onRotationComplete,
@@ -48,6 +50,16 @@ export function ThreePanelCarousel({
     const time = clock.elapsedTime;
     entryGroup.current.position.y = 0.05 + Math.sin(time * 1.05) * 0.045;
     entryGroup.current.rotation.z = Math.sin(time * 0.74) * 0.0045;
+
+    if (
+      rotationGroup.current &&
+      phase === "ready" &&
+      previousTarget.current === targetIndex
+    ) {
+      const targetRotation = -targetIndex * STEP + mouseRotationOffset;
+      rotationGroup.current.rotation.y +=
+        (targetRotation - rotationGroup.current.rotation.y) * 0.12;
+    }
   });
 
   useEffect(() => {

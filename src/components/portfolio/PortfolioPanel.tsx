@@ -20,6 +20,7 @@ export const PANEL_HEIGHT = 2.55;
 export const SEGMENT_ANGLE = (Math.PI * 2) / 3;
 const PANEL_ARC_ANGLE = SEGMENT_ANGLE * 0.82;
 const RADIAL_SEGMENTS = 56;
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 type PortfolioPanelProps = {
   category: Category;
@@ -30,7 +31,7 @@ type PortfolioPanelProps = {
 };
 
 function getCardImagePath(category: Category) {
-  return `/${category.title.toUpperCase()}.png`;
+  return `${BASE_PATH}/${category.title.toUpperCase()}.png`;
 }
 
 function drawImageCover(
