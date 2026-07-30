@@ -7,6 +7,21 @@ import { PerspectiveCamera } from "@react-three/drei";
 import type { Category, ExperienceState } from "@/types/portfolio";
 import { ThreePanelCarousel } from "./ThreePanelCarousel";
 
+const INTRO_DURATION = 8.2;
+
+function lerp(start: number, end: number, progress: number) {
+  return start + (end - start) * progress;
+}
+
+function smoothstep(edge0: number, edge1: number, value: number) {
+  const next = Math.min(Math.max((value - edge0) / (edge1 - edge0), 0), 1);
+  return next * next * (3 - 2 * next);
+}
+
+function easeOutQuint(value: number) {
+  return 1 - (1 - value) ** 5;
+}
+
 type PortfolioCanvasProps = {
   categories: Category[];
   activeIndex: number;
@@ -28,10 +43,10 @@ function CameraRig({ phase, reducedMotion, onEnterComplete }: CameraRigProps) {
   const entered = useRef(false);
   const target = useRef({ x: 0, y: 0, z: 0 });
   const isMobile = size.width < 700;
-  const baseZ = isMobile ? 24.2 : 10.9;
+  const baseZ = isMobile ? 24.4 : 11.25;
   const baseY = isMobile ? 0.32 : 0.12;
-  const topY = isMobile ? 11.8 : 9.2;
-  const topZ = isMobile ? 1.15 : 0.82;
+  const topY = isMobile ? 13.4 : 10.6;
+  const topZ = isMobile ? 0.86 : 0.58;
 
   useEffect(() => {
     if (entered.current) {
@@ -45,39 +60,52 @@ function CameraRig({ phase, reducedMotion, onEnterComplete }: CameraRigProps) {
   useEffect(() => {
     if (phase !== "entering" || entered.current) return;
 
-    entered.current = true;
-
     if (reducedMotion) {
+      entered.current = true;
       camera.position.set(0, baseY, baseZ);
       target.current = { x: 0, y: 0, z: 0 };
       onEnterComplete();
       return;
     }
 
-    const timeline = gsap.timeline({ onComplete: onEnterComplete });
-    timeline
-      .to(camera.position, {
-        x: 0,
-        y: baseY,
-        z: baseZ,
-        duration: 1.75,
-        ease: "expo.inOut",
-      })
-      .to(
-        target.current,
-        {
-          y: -0.08,
+    const progress = { value: 0 };
+    const start = { x: 0, y: topY, z: topZ };
+
+    const timeline = gsap.to(progress, {
+      value: 1,
+      duration: INTRO_DURATION,
+      ease: "none",
+      onUpdate: () => {
+        const p = progress.value;
+        const descent = smoothstep(0.48, 1, p);
+        const easedDescent = easeOutQuint(descent);
+        const orbit = Math.sin(p * Math.PI * 0.92) * (1 - easedDescent) * 0.52;
+        const topDrift = smoothstep(0, 0.48, p) * 0.22;
+
+        camera.position.set(
+          orbit,
+          lerp(start.y - topDrift, baseY, easedDescent),
+          lerp(start.z + topDrift * 0.34, baseZ, easedDescent),
+        );
+
+        target.current = {
+          x: lerp(0.08, 0, easedDescent),
+          y: lerp(0.02, -0.08, easedDescent),
           z: 0,
-          duration: 1.75,
-          ease: "expo.inOut",
-        },
-        0,
-      );
+        };
+      },
+      onComplete: () => {
+        entered.current = true;
+        camera.position.set(0, baseY, baseZ);
+        target.current = { x: 0, y: -0.08, z: 0 };
+        onEnterComplete();
+      },
+    });
 
     return () => {
       timeline.kill();
     };
-  }, [baseY, baseZ, camera, onEnterComplete, phase, reducedMotion]);
+  }, [baseY, baseZ, camera, onEnterComplete, phase, reducedMotion, topY, topZ]);
 
   useFrame(() => {
     camera.lookAt(target.current.x, target.current.y, target.current.z);
@@ -100,7 +128,7 @@ function ResponsiveCamera() {
   return (
     <PerspectiveCamera
       makeDefault
-      position={[0, isMobile ? 11.8 : 9.2, isMobile ? 1.15 : 0.82]}
+      position={[0, isMobile ? 13.4 : 10.6, isMobile ? 0.86 : 0.58]}
       fov={isMobile ? 42 : 35}
     />
   );

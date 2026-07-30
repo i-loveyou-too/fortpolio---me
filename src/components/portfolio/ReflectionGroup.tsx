@@ -10,7 +10,7 @@ type ReflectionGroupProps = {
 
 export function ReflectionGroup({ categories, activeIndex }: ReflectionGroupProps) {
   return (
-    <group position={[0, -3.58, 0]} scale={[1, -1, 1]}>
+    <group position={[0, -2.58, 0]} scale={[1, -0.82, 1]}>
       {categories.map((category, index) => (
         <PortfolioPanel
           key={`${category.id}-reflection`}

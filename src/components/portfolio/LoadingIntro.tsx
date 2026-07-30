@@ -17,7 +17,7 @@ export function LoadingIntro({ visible }: LoadingIntroProps) {
           transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
         >
           <p className="font-serif text-sm uppercase tracking-[0.18em] text-black/55">
-            KYUNGRIM LIM
+            KYUNGLIM.BYUN.
           </p>
         </motion.div>
       ) : null}
