@@ -5,7 +5,7 @@ export const categories: Category[] = [
     id: "build",
     title: "BUILD",
     subtitle: "Software & Engineering",
-    image: "/images/build.jpg",
+    image: "images/build.jpg",
     colors: {
       top: "#fbfaf5",
       middle: "#ece7de",
@@ -17,7 +17,7 @@ export const categories: Category[] = [
     id: "teach",
     title: "TEACH",
     subtitle: "Mathematics & Learning",
-    image: "/images/teach.jpg",
+    image: "images/teach.jpg",
     colors: {
       top: "#f2eafe",
       middle: "#d8caef",
@@ -29,7 +29,7 @@ export const categories: Category[] = [
     id: "think",
     title: "THINK",
     subtitle: "Product & Business",
-    image: "/images/think.jpg",
+    image: "images/think.jpg",
     colors: {
       top: "#ecfbf7",
       middle: "#c8ece6",
