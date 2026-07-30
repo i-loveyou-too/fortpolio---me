@@ -175,7 +175,7 @@ export default function AdminSprintExamV2AssignmentDetailPage() {
                 <div className="rounded-md bg-[#F5F8FB] px-3 py-3"><dt className="font-bold text-[#8290A6]">제출 마감</dt><dd className="mt-1 font-black text-[#45546C]">{formatDateTime(detail.assignment.due_at)}</dd></div>
                 <div className="rounded-md bg-[#F5F8FB] px-3 py-3"><dt className="font-bold text-[#8290A6]">재응시 승인</dt><dd className="mt-1 font-black text-[#45546C]">{detail.assignment.available_retake_approval_count > 0 ? `${detail.assignment.available_retake_approval_count}건 사용 가능` : "없음"}</dd></div>
               </dl>
-              {anyAttemptSubmitted && (
+              {detail.attempts.length > 0 && (
                 <div className="mt-5 flex flex-wrap gap-2">
                   {detail.assignment.available_retake_approval_count === 0 && !startedRetakeAttempt && (
                     <button
