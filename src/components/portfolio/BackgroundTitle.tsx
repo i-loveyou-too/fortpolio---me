@@ -10,8 +10,13 @@ type Ripple = {
   strength: number;
 };
 
-const RIPPLE_LIFETIME = 3.6;
-const RIPPLE_SPEED = 155;
+const RIPPLE_LIFETIME = 4.2;
+const RIPPLE_SPEED = 118;
+const RIPPLE_BAND_BASE = 28;
+const RIPPLE_BAND_GROWTH = 18;
+const RIPPLE_FREQUENCY = 1.65;
+const RIPPLE_VERTICAL_FORCE = 0.68;
+const MAX_RIPPLES = 2;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -136,15 +141,15 @@ export function BackgroundTitle() {
             const dx = x - ripple.x;
             const dy = y - ripple.y;
             const distance = Math.hypot(dx, dy) || 1;
-            const band = 14 + age * 12;
+            const band = RIPPLE_BAND_BASE + age * RIPPLE_BAND_GROWTH;
             const phase = (distance - radius) / band;
-            const envelope = Math.exp(-phase * phase * 0.95);
+            const envelope = Math.exp(-phase * phase * 0.55);
             const decay = (1 - age / RIPPLE_LIFETIME) ** 2.8;
-            const wave = Math.sin(phase * Math.PI * 3.2) * envelope * decay;
+            const wave = Math.sin(phase * Math.PI * RIPPLE_FREQUENCY) * envelope * decay;
             const force = wave * ripple.strength;
 
             offsetX += (dx / distance) * force;
-            offsetY += (dy / distance) * force * 0.58;
+            offsetY += (dy / distance) * force * RIPPLE_VERTICAL_FORCE;
           }
 
           const targetIndex = (y * width + x) * 4;
@@ -259,18 +264,18 @@ export function BackgroundTitle() {
 
       const distance = Math.hypot(x - last.x, y - last.y);
       const elapsed = Math.max(now - last.time, 16);
-      if (distance < 14 * dpr && elapsed < 64) return;
+      if (distance < 34 * dpr && elapsed < 140) return;
 
       const speed = distance / elapsed;
       ripplesRef.current.push({
         x,
         y,
         createdAt: now / 1000,
-        strength: clamp(2.4 + speed * 8, 3.2, 7.5) * dpr,
+        strength: clamp(4.4 + speed * 12, 5.4, 12.8) * dpr,
       });
 
-      if (ripplesRef.current.length > 10) {
-        ripplesRef.current.splice(0, ripplesRef.current.length - 10);
+      if (ripplesRef.current.length > MAX_RIPPLES) {
+        ripplesRef.current.splice(0, ripplesRef.current.length - MAX_RIPPLES);
       }
 
       lastPointerRef.current = { x, y, time: now, initialized: true };
